@@ -95,6 +95,16 @@
     els.audioPlayer.currentTime = 0;
     els.audioPlayer.play().catch(() => {});
   }
+  function toggleAudio() {
+    const card = currentCard();
+    if (!card) return;
+    if (!els.audioPlayer.src) setAudioSource(card);
+    if (els.audioPlayer.paused) {
+      els.audioPlayer.play().catch(() => {});
+    } else {
+      els.audioPlayer.pause();
+    }
+  }
   function renderRuby(container, card) {
     container.replaceChildren();
     const segments = Array.isArray(card.ruby) && card.ruby.length
@@ -343,6 +353,7 @@
     if (event.code === "ArrowLeft") move(-1);
     if (event.key.toLowerCase() === "j") { event.preventDefault(); markAnswer("known"); }
     if (event.key.toLowerCase() === "f") { event.preventDefault(); markAnswer("missed"); }
+    if (event.key.toLowerCase() === "p") { event.preventDefault(); toggleAudio(); }
   }
   document.addEventListener("keydown", handleShortcuts);
   els.flipBtn.addEventListener("click", flipCard);
