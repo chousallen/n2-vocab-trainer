@@ -1,0 +1,95 @@
+:root {
+  --ink: #202124;
+  --muted: #68717d;
+  --line: #d8dee6;
+  --paper: #fff;
+  --panel: #f6f7f9;
+  --accent: #146c5f;
+  --accent-soft: #e4f2ef;
+  --warn: #a35a00;
+  --danger: #b42334;
+  --ok: #1d7f45;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 300px minmax(460px, 1fr) 340px;
+  background: var(--panel);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+button, input, select, textarea { font: inherit; }
+button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); width: 100%; margin-top: 12px; }
+button.success { background: var(--ok); color: #fff; border-color: var(--ok); }
+button.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+a { color: var(--accent); }
+.sidebar, .details {
+  height: 100vh;
+  overflow: auto;
+  background: var(--paper);
+  padding: 18px;
+}
+.sidebar { border-right: 1px solid var(--line); }
+.details { border-left: 1px solid var(--line); }
+.brand h1, h2 { margin: 0; letter-spacing: 0; }
+.brand h1 { font-size: 23px; }
+.brand p, .eyebrow, .card-meta, .hint, .field span, .check, dt { color: var(--muted); font-size: 12px; }
+.brand p { margin: 3px 0 20px; }
+.panel { border-top: 1px solid var(--line); padding-top: 16px; margin-top: 18px; }
+.panel h2 { font-size: 15px; margin-bottom: 10px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.field { display: grid; gap: 6px; margin: 10px 0; }
+.field.inline { grid-template-columns: 1fr 88px; align-items: center; }
+.field input, .field select, #searchInput, textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 8px; background: #fff;
+}
+.check { display: flex; gap: 8px; align-items: center; margin: 10px 0; }
+.chapter-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.chapter-list label { display: flex; align-items: center; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; }
+.button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.workspace { min-width: 0; height: 100vh; display: grid; grid-template-rows: auto 1fr; }
+.topbar { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 18px; background: var(--paper); border-bottom: 1px solid var(--line); }
+.topbar h2 { font-size: 19px; }
+.session-stats { min-width: 150px; color: var(--muted); font-size: 13px; }
+.progress-track { height: 8px; margin-top: 8px; overflow: hidden; border-radius: 999px; background: #e8edf2; }
+#progressFill { width: 0; height: 100%; background: var(--accent); }
+.card-stage { min-height: 0; display: grid; grid-template-rows: minmax(320px, 1fr) auto auto auto; gap: 14px; padding: 24px; }
+.flashcard { position: relative; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); overflow: hidden; outline: none; }
+.card-face { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px; padding: 32px; text-align: center; backface-visibility: hidden; transition: transform .18s ease, opacity .18s ease; }
+.back { transform: rotateY(180deg); opacity: 0; justify-content: flex-start; align-items: stretch; text-align: left; }
+.flashcard.flipped .front { transform: rotateY(180deg); opacity: 0; }
+.flashcard.flipped .back { transform: rotateY(0); opacity: 1; }
+.word { font-size: 56px; line-height: 1.18; font-weight: 750; letter-spacing: 0; }
+.back-word { align-self: stretch; min-height: 54px; font-size: 34px; line-height: 1.35; font-weight: 720; text-align: center; word-break: keep-all; overflow-wrap: anywhere; }
+.back-word ruby { ruby-position: over; margin-inline: 2px; }
+.back-word rt { font-size: 13px; font-weight: 600; color: var(--muted); line-height: 1; }
+.translation { min-height: 76px; font-size: 30px; line-height: 1.35; font-weight: 650; text-align: center; align-self: stretch; display: grid; place-items: center; padding: 10px; background: var(--accent-soft); border-radius: 8px; }
+.edit-field { display: grid; gap: 8px; color: var(--muted); font-size: 12px; }
+.link-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.audio-row { display: grid; grid-template-columns: 150px 1fr; gap: 10px; align-items: center; }
+audio { width: 100%; }
+.controls, .answer-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.answer-controls { grid-template-columns: 1fr 1fr; }
+.stats #globalStats, #wordStats { font-size: 13px; line-height: 1.55; color: var(--muted); }
+dl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin: 0; }
+dd { margin: 0; font-weight: 650; text-align: right; }
+.list-panel { display: grid; grid-template-rows: auto 1fr; height: calc(100vh - 210px); }
+.list-panel .panel-head { align-items: flex-start; flex-direction: column; }
+.word-list { overflow: auto; display: grid; gap: 6px; align-content: start; padding-top: 10px; }
+.word-item { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; text-align: left; }
+.word-item.active { border-color: var(--accent); background: var(--accent-soft); }
+.word-item small { color: var(--muted); display: block; margin-top: 2px; }
+@media (max-width: 1120px) { body { grid-template-columns: 280px 1fr; } .details { grid-column: 1 / -1; height: auto; border-left: 0; border-top: 1px solid var(--line); } .list-panel { height: 360px; } }
+@media (max-width: 760px) { body { display: block; } .sidebar, .workspace, .details { height: auto; } .workspace { min-height: 680px; } .topbar { flex-direction: column; align-items: flex-start; } .word { font-size: 40px; } .audio-row { grid-template-columns: 1fr; } }

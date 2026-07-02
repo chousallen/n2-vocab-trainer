@@ -1,0 +1,389 @@
+(function () {
+  const vocab = window.N2_VOCAB || [];
+  const storeKey = "jongwen-n2-vocab-progress-v1";
+  const translationKey = "jongwen-n2-vocab-translations-v1";
+  const settingsKey = "jongwen-n2-vocab-settings-v1";
+
+  const state = {
+    progress: loadJson(storeKey, {}),
+    customTranslations: loadJson(translationKey, {}),
+    settings: loadJson(settingsKey, null),
+    session: [],
+    index: 0,
+    flipped: false
+  };
+
+  const els = {
+    chapterList: document.getElementById("chapterList"),
+    allChapters: document.getElementById("allChapters"),
+    modeSelect: document.getElementById("modeSelect"),
+    sampleCount: document.getElementById("sampleCount"),
+    sampleField: document.getElementById("sampleField"),
+    shuffleCards: document.getElementById("shuffleCards"),
+    autoPlay: document.getElementById("autoPlay"),
+    startBtn: document.getElementById("startBtn"),
+    globalStats: document.getElementById("globalStats"),
+    exportBtn: document.getElementById("exportBtn"),
+    importBtn: document.getElementById("importBtn"),
+    importFile: document.getElementById("importFile"),
+    sessionTitle: document.getElementById("sessionTitle"),
+    positionText: document.getElementById("positionText"),
+    progressFill: document.getElementById("progressFill"),
+    flashcard: document.getElementById("flashcard"),
+    cardMeta: document.getElementById("cardMeta"),
+    backMeta: document.getElementById("backMeta"),
+    wordText: document.getElementById("wordText"),
+    backWord: document.getElementById("backWord"),
+    translationText: document.getElementById("translationText"),
+    translationEdit: document.getElementById("translationEdit"),
+    dictLink: document.getElementById("dictLink"),
+    saveTranslation: document.getElementById("saveTranslation"),
+    playAudioBtn: document.getElementById("playAudioBtn"),
+    audioPlayer: document.getElementById("audioPlayer"),
+    prevBtn: document.getElementById("prevBtn"),
+    flipBtn: document.getElementById("flipBtn"),
+    nextBtn: document.getElementById("nextBtn"),
+    missBtn: document.getElementById("missBtn"),
+    knownBtn: document.getElementById("knownBtn"),
+    wordStats: document.getElementById("wordStats"),
+    searchInput: document.getElementById("searchInput"),
+    wordList: document.getElementById("wordList")
+  };
+
+  function loadJson(key, fallback) {
+    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_err) { return fallback; }
+  }
+  function saveJson(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+  function getProgress(id) {
+    return state.progress[id] || { viewed: 0, known: 0, missed: 0, lastViewed: "", lastAnswered: "" };
+  }
+  function setProgress(id, patch) {
+    state.progress[id] = { ...getProgress(id), ...patch };
+    saveJson(storeKey, state.progress);
+    renderGlobalStats();
+    renderWordStats();
+    renderWordList();
+  }
+  function translationFor(card) {
+    return state.customTranslations[card.id] || card.translation || "尚未建立中文翻譯。可先按下方字典連結查詢，再把翻譯填入並儲存。";
+  }
+  function translationSourceFor(card) {
+    if (state.customTranslations[card.id]) return "custom";
+    const labels = {
+      quiz: "quiz",
+      "jisho+mt": "dictionary + MT",
+      "mt-ja": "MT"
+    };
+    return labels[card.translation_source] || "source unknown";
+  }
+  function localAudioUrlFor(card) {
+    return `../新日檢完勝單語N2/新日檢完勝單語N2_Chapter ${card.chapter}/${card.id}.mp3`;
+  }
+  function remoteAudioUrlFor(card) {
+    return card.audioUrl.replace(/^http:/, "https:");
+  }
+  function setAudioSource(card) {
+    els.audioPlayer.dataset.cardId = card.id;
+    els.audioPlayer.dataset.fallbackSrc = "";
+    els.audioPlayer.src = remoteAudioUrlFor(card);
+    els.playAudioBtn.disabled = false;
+  }
+  function playAudio() {
+    const card = currentCard();
+    if (!card) return;
+    if (!els.audioPlayer.src) setAudioSource(card);
+    els.audioPlayer.currentTime = 0;
+    els.audioPlayer.play().catch(() => {});
+  }
+  function renderRuby(container, card) {
+    container.replaceChildren();
+    const segments = Array.isArray(card.ruby) && card.ruby.length
+      ? card.ruby
+      : [{ text: card.word, reading: card.reading || "" }];
+    segments.forEach((segment) => {
+      if (segment.reading) {
+        const ruby = document.createElement("ruby");
+        ruby.textContent = segment.text;
+        const rt = document.createElement("rt");
+        rt.textContent = segment.reading;
+        ruby.appendChild(rt);
+        container.appendChild(ruby);
+      } else {
+        container.appendChild(document.createTextNode(segment.text));
+      }
+    });
+  }
+  function selectedChapters() {
+    return [...els.chapterList.querySelectorAll("input:checked")].map((input) => Number(input.value));
+  }
+  function saveSettings() {
+    const settings = {
+      chapters: selectedChapters(),
+      mode: els.modeSelect.value,
+      sampleCount: Number(els.sampleCount.value),
+      shuffle: els.shuffleCards.checked,
+      autoPlay: els.autoPlay.checked
+    };
+    state.settings = settings;
+    saveJson(settingsKey, settings);
+  }
+  function byWeakness(a, b) {
+    const pa = getProgress(a.id), pb = getProgress(b.id);
+    const scoreA = pa.known * 2 - pa.missed - (pa.viewed ? 0 : 5);
+    const scoreB = pb.known * 2 - pb.missed - (pb.viewed ? 0 : 5);
+    return scoreA - scoreB || a.id.localeCompare(b.id);
+  }
+  function shuffle(list) {
+    const copy = [...list];
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+  function makeSession() {
+    saveSettings();
+    const chapters = selectedChapters();
+    let pool = vocab.filter((card) => chapters.includes(Number(card.chapter)));
+    const count = Math.max(1, Math.min(Number(els.sampleCount.value) || 50, pool.length));
+    if (els.modeSelect.value === "random") pool = shuffle(pool).slice(0, count);
+    if (els.modeSelect.value === "weak") pool = pool.sort(byWeakness).slice(0, count);
+    if (els.shuffleCards.checked) pool = shuffle(pool);
+    state.session = pool;
+    state.index = 0;
+    state.flipped = false;
+    renderCard(true);
+    renderWordList();
+  }
+  function currentCard() { return state.session[state.index]; }
+  function markViewed(card) {
+    if (!card) return;
+    const p = getProgress(card.id);
+    setProgress(card.id, { viewed: p.viewed + 1, lastViewed: new Date().toISOString() });
+  }
+  function renderCard(countView) {
+    const card = currentCard();
+    els.flashcard.classList.toggle("flipped", state.flipped);
+    els.flipBtn.textContent = state.flipped ? "Show Front" : "Show Back";
+    if (!card) {
+      els.sessionTitle.textContent = "Choose chapters and start";
+      els.positionText.textContent = "0 / 0";
+      els.progressFill.style.width = "0%";
+      els.cardMeta.textContent = "No session";
+      els.wordText.textContent = "Start a session";
+      els.backWord.replaceChildren();
+      els.translationText.textContent = "";
+      els.audioPlayer.removeAttribute("src");
+      els.audioPlayer.removeAttribute("data-card-id");
+      els.audioPlayer.removeAttribute("data-fallback-src");
+      els.playAudioBtn.disabled = true;
+      renderWordStats();
+      return;
+    }
+    if (countView) markViewed(card);
+    els.sessionTitle.textContent = `${state.session.length} words selected`;
+    els.positionText.textContent = `${state.index + 1} / ${state.session.length}`;
+    els.progressFill.style.width = `${Math.round(((state.index + 1) / state.session.length) * 100)}%`;
+    els.cardMeta.textContent = `Chapter ${card.chapter} / Section ${card.section} / #${card.id}`;
+    els.backMeta.textContent = `${els.cardMeta.textContent} / ${translationSourceFor(card)}`;
+    els.wordText.textContent = card.word;
+    renderRuby(els.backWord, card);
+    els.translationText.textContent = translationFor(card);
+    els.translationEdit.value = state.customTranslations[card.id] || card.translation || "";
+    els.dictLink.href = `https://www.google.com/search?q=${encodeURIComponent(card.word + ' 中文 意思 日文')}`;
+    els.dictLink.textContent = "Dictionary search";
+    const isNewAudioCard = els.audioPlayer.dataset.cardId !== card.id;
+    if (isNewAudioCard) setAudioSource(card);
+    if (isNewAudioCard && countView && els.autoPlay.checked) {
+      els.audioPlayer.play().catch(() => {});
+    }
+    renderWordStats();
+    renderWordList();
+  }
+  function flipCard() {
+    if (!currentCard()) return;
+    state.flipped = !state.flipped;
+    renderCard(false);
+  }
+  function move(delta) {
+    if (!state.session.length) return;
+    state.index = Math.max(0, Math.min(state.session.length - 1, state.index + delta));
+    state.flipped = false;
+    renderCard(true);
+  }
+  function markAnswer(kind) {
+    const card = currentCard();
+    if (!card) return;
+    const p = getProgress(card.id);
+    const patch = { lastAnswered: new Date().toISOString() };
+    if (kind === "known") patch.known = p.known + 1;
+    if (kind === "missed") patch.missed = p.missed + 1;
+    setProgress(card.id, patch);
+    move(1);
+  }
+  function renderChapters() {
+    const chapters = [...new Set(vocab.map((card) => Number(card.chapter)))].sort((a, b) => a - b);
+    const saved = state.settings?.chapters?.length ? state.settings.chapters : chapters;
+    els.chapterList.innerHTML = "";
+    chapters.forEach((chapter) => {
+      const count = vocab.filter((card) => Number(card.chapter) === chapter).length;
+      const label = document.createElement("label");
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.value = String(chapter);
+      input.checked = saved.includes(chapter);
+      input.addEventListener("change", saveSettings);
+      const span = document.createElement("span");
+      span.textContent = `${chapter} (${count})`;
+      label.append(input, span);
+      els.chapterList.append(label);
+    });
+  }
+  function renderGlobalStats() {
+    const ids = new Set(vocab.map((card) => card.id));
+    const viewed = [...ids].filter((id) => getProgress(id).viewed > 0).length;
+    const known = [...ids].filter((id) => getProgress(id).known > 0).length;
+    const totalViews = [...ids].reduce((sum, id) => sum + getProgress(id).viewed, 0);
+    const translations = vocab.filter((card) => card.translation || state.customTranslations[card.id]).length;
+    els.globalStats.innerHTML = `
+      <div>${viewed} / ${vocab.length} words viewed</div>
+      <div>${known} words marked known at least once</div>
+      <div>${totalViews} total card views</div>
+      <div>${translations} words have Chinese translations</div>
+    `;
+  }
+  function renderWordStats() {
+    const card = currentCard();
+    if (!card) { els.wordStats.innerHTML = ""; return; }
+    const p = getProgress(card.id);
+    const rate = p.known + p.missed ? Math.round((p.known / (p.known + p.missed)) * 100) + "%" : "-";
+    els.wordStats.innerHTML = `
+      <dt>Word ID</dt><dd>${card.id}</dd>
+      <dt>Chapter</dt><dd>${card.chapter}</dd>
+      <dt>Viewed</dt><dd>${p.viewed}</dd>
+      <dt>Known</dt><dd>${p.known}</dd>
+      <dt>Missed</dt><dd>${p.missed}</dd>
+      <dt>Success Rate</dt><dd>${rate}</dd>
+    `;
+  }
+  function renderWordList() {
+    const q = els.searchInput.value.trim().toLowerCase();
+    const cards = (state.session.length ? state.session : vocab).filter((card) => {
+      return !q || [card.word, card.id, String(card.chapter), translationFor(card)].join(" ").toLowerCase().includes(q);
+    }).slice(0, 350);
+    const current = currentCard();
+    els.wordList.innerHTML = "";
+    cards.forEach((card) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "word-item" + (current && current.id === card.id ? " active" : "");
+      const p = getProgress(card.id);
+      button.innerHTML = `<span>${card.word}<small>Ch ${card.chapter} #${card.id}</small></span><small>${p.viewed}/${p.known}</small>`;
+      button.addEventListener("click", () => {
+        const idx = state.session.findIndex((item) => item.id === card.id);
+        if (idx >= 0) {
+          state.index = idx;
+        } else {
+          state.session = [card];
+          state.index = 0;
+        }
+        state.flipped = false;
+        renderCard(true);
+      });
+      els.wordList.append(button);
+    });
+  }
+  function exportProgress() {
+    const blob = new Blob([JSON.stringify({ progress: state.progress, translations: state.customTranslations }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "n2-vocab-progress.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  function importProgress(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const data = JSON.parse(reader.result);
+      state.progress = data.progress || {};
+      state.customTranslations = data.translations || {};
+      saveJson(storeKey, state.progress);
+      saveJson(translationKey, state.customTranslations);
+      renderCard(false);
+      renderGlobalStats();
+      renderWordList();
+    };
+    reader.readAsText(file);
+  }
+
+  els.allChapters.addEventListener("click", () => {
+    const inputs = [...els.chapterList.querySelectorAll("input")];
+    const allChecked = inputs.every((input) => input.checked);
+    inputs.forEach((input) => { input.checked = !allChecked; });
+    saveSettings();
+  });
+  els.modeSelect.addEventListener("change", () => {
+    els.sampleField.hidden = els.modeSelect.value === "all";
+    saveSettings();
+  });
+  [els.sampleCount, els.shuffleCards, els.autoPlay].forEach((el) => el.addEventListener("change", saveSettings));
+  els.startBtn.addEventListener("click", makeSession);
+  els.flashcard.addEventListener("click", (event) => {
+    if (["TEXTAREA", "BUTTON", "A"].includes(event.target.tagName)) return;
+    flipCard();
+  });
+  function isTypingTarget(target) {
+    return ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) || target.isContentEditable;
+  }
+  function handleShortcuts(event) {
+    if (isTypingTarget(event.target)) return;
+    if (event.code === "Space") { event.preventDefault(); flipCard(); }
+    if (event.code === "ArrowRight") move(1);
+    if (event.code === "ArrowLeft") move(-1);
+    if (event.key.toLowerCase() === "j") { event.preventDefault(); markAnswer("known"); }
+    if (event.key.toLowerCase() === "f") { event.preventDefault(); markAnswer("missed"); }
+  }
+  document.addEventListener("keydown", handleShortcuts);
+  els.flipBtn.addEventListener("click", flipCard);
+  els.prevBtn.addEventListener("click", () => move(-1));
+  els.nextBtn.addEventListener("click", () => move(1));
+  els.knownBtn.addEventListener("click", () => markAnswer("known"));
+  els.missBtn.addEventListener("click", () => markAnswer("missed"));
+  els.playAudioBtn.addEventListener("click", playAudio);
+  els.audioPlayer.addEventListener("error", () => {
+    const fallback = els.audioPlayer.dataset.fallbackSrc;
+    if (fallback && els.audioPlayer.src !== fallback) {
+      els.audioPlayer.src = fallback;
+      els.audioPlayer.dataset.fallbackSrc = "";
+      els.audioPlayer.play().catch(() => {});
+    }
+  });
+  els.saveTranslation.addEventListener("click", () => {
+    const card = currentCard();
+    if (!card) return;
+    const value = els.translationEdit.value.trim();
+    if (value) state.customTranslations[card.id] = value;
+    else delete state.customTranslations[card.id];
+    saveJson(translationKey, state.customTranslations);
+    renderCard(false);
+    renderGlobalStats();
+  });
+  els.searchInput.addEventListener("input", renderWordList);
+  els.exportBtn.addEventListener("click", exportProgress);
+  els.importBtn.addEventListener("click", () => els.importFile.click());
+  els.importFile.addEventListener("change", () => {
+    if (els.importFile.files[0]) importProgress(els.importFile.files[0]);
+  });
+
+  if (state.settings) {
+    els.modeSelect.value = state.settings.mode || "all";
+    els.sampleCount.value = state.settings.sampleCount || 50;
+    els.shuffleCards.checked = state.settings.shuffle !== false;
+    els.autoPlay.checked = Boolean(state.settings.autoPlay);
+  }
+  renderChapters();
+  els.sampleField.hidden = els.modeSelect.value === "all";
+  renderGlobalStats();
+  renderWordList();
+})();

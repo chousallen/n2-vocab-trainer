@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>N2 Vocabulary Trainer</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <aside class="sidebar">
+      <header class="brand">
+        <h1>N2 Vocabulary</h1>
+        <p>新日檢完勝單語N2</p>
+      </header>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Chapters</h2>
+          <button id="allChapters" type="button">All</button>
+        </div>
+        <div id="chapterList" class="chapter-list"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Session</h2>
+        <label class="field">
+          <span>Mode</span>
+          <select id="modeSelect">
+            <option value="all">All selected words</option>
+            <option value="random">Random sample</option>
+            <option value="weak">Prioritize weak/unseen</option>
+          </select>
+        </label>
+        <label class="field inline" id="sampleField">
+          <span>Count</span>
+          <input id="sampleCount" type="number" min="1" max="1546" value="50">
+        </label>
+        <label class="check">
+          <input id="shuffleCards" type="checkbox" checked>
+          <span>Shuffle session order</span>
+        </label>
+        <label class="check">
+          <input id="autoPlay" type="checkbox">
+          <span>Play audio when card opens</span>
+        </label>
+        <button id="startBtn" class="primary" type="button">Start New Session</button>
+      </section>
+
+      <section class="panel stats">
+        <h2>Progress</h2>
+        <div id="globalStats"></div>
+        <div class="button-row">
+          <button id="exportBtn" type="button">Export</button>
+          <button id="importBtn" type="button">Import</button>
+        </div>
+        <input id="importFile" type="file" accept="application/json" hidden>
+      </section>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">Current Session</div>
+          <h2 id="sessionTitle">Choose chapters and start</h2>
+        </div>
+        <div class="session-stats">
+          <span id="positionText">0 / 0</span>
+          <div class="progress-track"><div id="progressFill"></div></div>
+        </div>
+      </header>
+
+      <section class="card-stage">
+        <article id="flashcard" class="flashcard" tabindex="0">
+          <div class="card-face front">
+            <div class="card-meta" id="cardMeta">No session</div>
+            <div class="word" id="wordText">Start a session</div>
+            <div class="hint">Click the card or press Space to show the back.</div>
+          </div>
+          <div class="card-face back">
+            <div class="card-meta" id="backMeta"></div>
+            <div class="back-word" id="backWord"></div>
+            <div class="translation" id="translationText"></div>
+            <label class="edit-field">
+              <span>Edit Chinese translation</span>
+              <textarea id="translationEdit" rows="3"></textarea>
+            </label>
+            <div class="link-row">
+              <a id="dictLink" target="_blank" rel="noreferrer">Dictionary search</a>
+              <button id="saveTranslation" type="button">Save Translation</button>
+            </div>
+          </div>
+        </article>
+
+        <div class="audio-row">
+          <button id="playAudioBtn" type="button" disabled>Play Audio</button>
+          <audio id="audioPlayer" controls preload="none"></audio>
+        </div>
+
+        <div class="controls">
+          <button id="prevBtn" type="button">Previous</button>
+          <button id="flipBtn" type="button">Show Back</button>
+          <button id="nextBtn" type="button">Next</button>
+        </div>
+
+        <div class="answer-controls">
+          <button id="missBtn" class="danger" type="button">Missed (F)</button>
+          <button id="knownBtn" class="success" type="button">I Knew It (J)</button>
+        </div>
+      </section>
+    </main>
+
+    <aside class="details">
+      <section class="panel current">
+        <h2>Current Word</h2>
+        <dl id="wordStats"></dl>
+      </section>
+      <section class="panel list-panel">
+        <div class="panel-head">
+          <h2>Words</h2>
+          <input id="searchInput" type="search" placeholder="Search word...">
+        </div>
+        <div id="wordList" class="word-list"></div>
+      </section>
+    </aside>
+
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
