@@ -6538,14 +6538,14 @@ window.N2_VOCAB = [
   {
     "id": "0322",
     "word": "添える",
-    "translation": "裝飾；陪伴（就像卡片的禮物）；添加作為支持；支撐",
-    "translation_source": "jisho+mt",
+    "translation": "添加",
+    "translation_source": "manual",
     "chapter": 3,
     "chapterTitle": "Chapter 3",
     "section": 3,
     "sectionTitle": "Section 3全部播放",
     "audioUrl": "http://www.jwbooks.com.tw/APPSC/JN556859/webroot/files/book2/short/0322.mp3",
-    "english_gloss": "to garnish; to accompany (as a card does a gift); to add to as support; to prop up",
+    "english_gloss": "to add; to append; to accompany",
     "reading": "そえる",
     "ruby": [
       {
