@@ -4948,8 +4948,8 @@ window.N2_VOCAB = [
   {
     "id": "0245",
     "word": "月日",
-    "translation": "時間；年；天； （人的）生活；月亮和太陽",
-    "translation_source": "jisho+mt",
+    "translation": "時間；日子",
+    "translation_source": "manual",
     "chapter": 2,
     "chapterTitle": "Chapter 2",
     "section": 5,
