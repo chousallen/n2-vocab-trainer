@@ -17,6 +17,9 @@
     chapterList: document.getElementById("chapterList"),
     allChapters: document.getElementById("allChapters"),
     modeSelect: document.getElementById("modeSelect"),
+    studyMode: document.getElementById("studyMode"),
+    distractorField: document.getElementById("distractorField"),
+    distractorScope: document.getElementById("distractorScope"),
     sampleCount: document.getElementById("sampleCount"),
     sampleField: document.getElementById("sampleField"),
     shuffleCards: document.getElementById("shuffleCards"),
@@ -33,6 +36,7 @@
     cardMeta: document.getElementById("cardMeta"),
     backMeta: document.getElementById("backMeta"),
     wordText: document.getElementById("wordText"),
+    frontHint: document.getElementById("frontHint"),
     backWord: document.getElementById("backWord"),
     translationText: document.getElementById("translationText"),
     translationEdit: document.getElementById("translationEdit"),
@@ -40,6 +44,9 @@
     saveTranslation: document.getElementById("saveTranslation"),
     playAudioBtn: document.getElementById("playAudioBtn"),
     audioPlayer: document.getElementById("audioPlayer"),
+    choicePanel: document.getElementById("choicePanel"),
+    choiceOptions: document.getElementById("choiceOptions"),
+    choiceFeedback: document.getElementById("choiceFeedback"),
     prevBtn: document.getElementById("prevBtn"),
     flipBtn: document.getElementById("flipBtn"),
     nextBtn: document.getElementById("nextBtn"),
@@ -130,6 +137,8 @@
     const settings = {
       chapters: selectedChapters(),
       mode: els.modeSelect.value,
+      studyMode: els.studyMode.value,
+      distractorScope: els.distractorScope.value,
       sampleCount: Number(els.sampleCount.value),
       shuffle: els.shuffleCards.checked,
       autoPlay: els.autoPlay.checked
@@ -162,6 +171,10 @@
     state.session = pool;
     state.index = 0;
     state.flipped = false;
+    state.choiceCardId = "";
+    state.choiceOptions = [];
+    state.choiceAnswered = false;
+    state.choiceSelected = "";
     renderCard(true);
     renderWordList();
   }
@@ -173,8 +186,12 @@
   }
   function renderCard(countView) {
     const card = currentCard();
+    const choiceMode = els.studyMode.value === "choice";
     els.flashcard.classList.toggle("flipped", state.flipped);
     els.flipBtn.textContent = state.flipped ? "Show Front" : "Show Back";
+    els.choicePanel.hidden = !choiceMode;
+    els.flipBtn.hidden = choiceMode;
+    els.missBtn.parentElement.hidden = choiceMode;
     if (!card) {
       els.sessionTitle.textContent = "Choose chapters and start";
       els.positionText.textContent = "0 / 0";
@@ -187,6 +204,8 @@
       els.audioPlayer.removeAttribute("data-card-id");
       els.audioPlayer.removeAttribute("data-fallback-src");
       els.playAudioBtn.disabled = true;
+      els.choiceOptions.replaceChildren();
+      els.choiceFeedback.textContent = "";
       renderWordStats();
       return;
     }
@@ -197,6 +216,7 @@
     els.cardMeta.textContent = `Chapter ${card.chapter} / Section ${card.section} / #${card.id}`;
     els.backMeta.textContent = `${els.cardMeta.textContent} / ${translationSourceFor(card)}`;
     els.wordText.textContent = card.word;
+    els.frontHint.textContent = choiceMode ? "Choose the correct Chinese meaning below." : "Click the card or press Space to show the back.";
     renderRuby(els.backWord, card);
     els.translationText.textContent = translationFor(card);
     els.translationEdit.value = state.customTranslations[card.id] || card.translation || "";
@@ -207,11 +227,12 @@
     if (isNewAudioCard && countView && els.autoPlay.checked) {
       els.audioPlayer.play().catch(() => {});
     }
+    if (choiceMode) renderChoices(card);
     renderWordStats();
     renderWordList();
   }
   function flipCard() {
-    if (!currentCard()) return;
+    if (!currentCard() || els.studyMode.value === "choice") return;
     state.flipped = !state.flipped;
     renderCard(false);
   }
@@ -230,6 +251,72 @@
     if (kind === "missed") patch.missed = p.missed + 1;
     setProgress(card.id, patch);
     move(1);
+  }
+  function choicePool(card) {
+    const selected = new Set(selectedChapters());
+    let pool = els.distractorScope.value === "selected"
+      ? vocab.filter((item) => selected.has(Number(item.chapter)))
+      : vocab;
+    pool = pool.filter((item) => item.id !== card.id && translationFor(item) !== translationFor(card));
+    if (pool.length < 3) {
+      pool = vocab.filter((item) => item.id !== card.id && translationFor(item) !== translationFor(card));
+    }
+    return pool;
+  }
+  function buildChoiceOptions(card) {
+    const used = new Set([translationFor(card)]);
+    const distractors = [];
+    for (const item of shuffle(choicePool(card))) {
+      const text = translationFor(item);
+      if (used.has(text)) continue;
+      used.add(text);
+      distractors.push(item);
+      if (distractors.length === 3) break;
+    }
+    return shuffle([
+      { id: card.id, text: translationFor(card), correct: true },
+      ...distractors.map((item) => ({ id: item.id, text: translationFor(item), correct: false }))
+    ]);
+  }
+  function renderChoices(card) {
+    if (state.choiceCardId !== card.id || !state.choiceOptions.length) {
+      state.choiceCardId = card.id;
+      state.choiceOptions = buildChoiceOptions(card);
+      state.choiceAnswered = false;
+      state.choiceSelected = "";
+    }
+    els.choiceOptions.replaceChildren();
+    state.choiceOptions.forEach((option, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "choice-option";
+      if (state.choiceAnswered && option.correct) button.classList.add("correct");
+      if (state.choiceAnswered && state.choiceSelected === option.id && !option.correct) button.classList.add("wrong");
+      button.disabled = state.choiceAnswered;
+      button.textContent = `${index + 1}. ${option.text}`;
+      button.addEventListener("click", () => selectChoice(option));
+      els.choiceOptions.append(button);
+    });
+    if (!state.choiceAnswered) {
+      els.choiceFeedback.textContent = "Choose the correct Chinese meaning.";
+    }
+  }
+  function selectChoice(option) {
+    const card = currentCard();
+    if (!card || state.choiceAnswered) return;
+    state.choiceAnswered = true;
+    state.choiceSelected = option.id;
+    const p = getProgress(card.id);
+    const patch = { lastAnswered: new Date().toISOString() };
+    if (option.correct) {
+      patch.known = p.known + 1;
+      els.choiceFeedback.textContent = "Correct. Press Next or → to continue.";
+    } else {
+      patch.missed = p.missed + 1;
+      els.choiceFeedback.textContent = `Missed. Correct meaning: ${translationFor(card)}`;
+    }
+    setProgress(card.id, patch);
+    renderChoices(card);
   }
   function renderChapters() {
     const chapters = [...new Set(vocab.map((card) => Number(card.chapter)))].sort((a, b) => a - b);
@@ -337,7 +424,18 @@
     els.sampleField.hidden = els.modeSelect.value === "all";
     saveSettings();
   });
+  els.studyMode.addEventListener("change", () => {
+    els.distractorField.hidden = els.studyMode.value !== "choice";
+    state.choiceCardId = "";
+    saveSettings();
+    renderCard(false);
+  });
   [els.sampleCount, els.shuffleCards, els.autoPlay].forEach((el) => el.addEventListener("change", saveSettings));
+  els.distractorScope.addEventListener("change", () => {
+    state.choiceCardId = "";
+    saveSettings();
+    renderCard(false);
+  });
   els.startBtn.addEventListener("click", makeSession);
   els.flashcard.addEventListener("click", (event) => {
     if (["TEXTAREA", "BUTTON", "A"].includes(event.target.tagName)) return;
@@ -351,8 +449,13 @@
     if (event.code === "Space") { event.preventDefault(); flipCard(); }
     if (event.code === "ArrowRight") move(1);
     if (event.code === "ArrowLeft") move(-1);
-    if (event.key.toLowerCase() === "j") { event.preventDefault(); markAnswer("known"); }
-    if (event.key.toLowerCase() === "f") { event.preventDefault(); markAnswer("missed"); }
+    if (els.studyMode.value === "choice" && /^[1-4]$/.test(event.key)) {
+      event.preventDefault();
+      const option = state.choiceOptions[Number(event.key) - 1];
+      if (option) selectChoice(option);
+    }
+    if (els.studyMode.value !== "choice" && event.key.toLowerCase() === "j") { event.preventDefault(); markAnswer("known"); }
+    if (els.studyMode.value !== "choice" && event.key.toLowerCase() === "f") { event.preventDefault(); markAnswer("missed"); }
     if (event.key.toLowerCase() === "p") { event.preventDefault(); toggleAudio(); }
   }
   document.addEventListener("keydown", handleShortcuts);
@@ -389,12 +492,15 @@
 
   if (state.settings) {
     els.modeSelect.value = state.settings.mode || "all";
+    els.studyMode.value = state.settings.studyMode || "flashcard";
+    els.distractorScope.value = state.settings.distractorScope || "selected";
     els.sampleCount.value = state.settings.sampleCount || 50;
     els.shuffleCards.checked = state.settings.shuffle !== false;
     els.autoPlay.checked = Boolean(state.settings.autoPlay);
   }
   renderChapters();
   els.sampleField.hidden = els.modeSelect.value === "all";
+  els.distractorField.hidden = els.studyMode.value !== "choice";
   renderGlobalStats();
   renderWordList();
 })();

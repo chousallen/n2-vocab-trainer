@@ -32,6 +32,20 @@
             <option value="weak">Prioritize weak/unseen</option>
           </select>
         </label>
+        <label class="field">
+          <span>Session type</span>
+          <select id="studyMode">
+            <option value="flashcard">Flashcards</option>
+            <option value="choice">4-choice Chinese meaning test</option>
+          </select>
+        </label>
+        <label class="field" id="distractorField">
+          <span>Meaning options from</span>
+          <select id="distractorScope">
+            <option value="selected">Selected chapters</option>
+            <option value="all">All vocabulary</option>
+          </select>
+        </label>
         <label class="field inline" id="sampleField">
           <span>Count</span>
           <input id="sampleCount" type="number" min="1" max="1546" value="50">
@@ -75,7 +89,7 @@
           <div class="card-face front">
             <div class="card-meta" id="cardMeta">No session</div>
             <div class="word" id="wordText">Start a session</div>
-            <div class="hint">Click the card or press Space to show the back.</div>
+            <div class="hint" id="frontHint">Click the card or press Space to show the back.</div>
           </div>
           <div class="card-face back">
             <div class="card-meta" id="backMeta"></div>
@@ -95,6 +109,11 @@
         <div class="audio-row">
           <button id="playAudioBtn" type="button" disabled>Play Audio</button>
           <audio id="audioPlayer" controls preload="none"></audio>
+        </div>
+
+        <div id="choicePanel" class="choice-panel" hidden>
+          <div id="choiceOptions" class="choice-options"></div>
+          <div id="choiceFeedback" class="choice-feedback" aria-live="polite"></div>
         </div>
 
         <div class="controls">
