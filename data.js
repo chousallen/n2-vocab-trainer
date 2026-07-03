@@ -5432,14 +5432,14 @@ window.N2_VOCAB = [
   {
     "id": "0270",
     "word": "もたれる",
-    "translation": "倚靠；依靠；斜倚於；躺得很重（腹部）；難以消化",
-    "translation_source": "jisho+mt",
+    "translation": "靠著；倚靠；胃脹不適；消化不良；依賴",
+    "translation_source": "manual",
     "chapter": 3,
     "chapterTitle": "Chapter 3",
     "section": 1,
     "sectionTitle": "Section 1全部播放",
     "audioUrl": "http://www.jwbooks.com.tw/APPSC/JN556859/webroot/files/book2/short/0270.mp3",
-    "english_gloss": "to lean against; to lean on; to recline on; to lie heavy (on the stomach); to be uneasily digested",
+    "english_gloss": "to lean against; to recline on; to feel heavy in the stomach; to be dependent on",
     "reading": "もたれる",
     "ruby": [
       {
