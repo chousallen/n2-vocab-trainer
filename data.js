@@ -5654,19 +5654,19 @@ window.N2_VOCAB = [
   {
     "id": "0280",
     "word": "間",
-    "translation": "空間（之間）；差距；間隔；距離；拉緊",
-    "translation_source": "jisho+mt",
+    "translation": "時間",
+    "translation_source": "manual",
     "chapter": 3,
     "chapterTitle": "Chapter 3",
     "section": 1,
     "sectionTitle": "Section 1全部播放",
     "audioUrl": "http://www.jwbooks.com.tw/APPSC/JN556859/webroot/files/book2/short/0280.mp3",
-    "english_gloss": "space (between); gap; interval; distance; stretch",
-    "reading": "かん",
+    "english_gloss": "time; interval; while",
+    "reading": "ま",
     "ruby": [
       {
         "text": "間",
-        "reading": "かん"
+        "reading": "ま"
       }
     ]
   },
