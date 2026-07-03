@@ -5937,18 +5937,18 @@ window.N2_VOCAB = [
     "id": "0293",
     "word": "食物",
     "translation": "食物；食品",
-    "translation_source": "jisho+mt",
+    "translation_source": "manual",
     "chapter": 3,
     "chapterTitle": "Chapter 3",
     "section": 2,
     "sectionTitle": "Section 2全部播放",
     "audioUrl": "http://www.jwbooks.com.tw/APPSC/JN556859/webroot/files/book2/short/0293.mp3",
     "english_gloss": "food; foodstuff",
-    "reading": "たべもの",
+    "reading": "しょくもつ",
     "ruby": [
       {
         "text": "食物",
-        "reading": "たべもの"
+        "reading": "しょくもつ"
       }
     ]
   },
