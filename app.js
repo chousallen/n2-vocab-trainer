@@ -62,7 +62,16 @@
   }
   function saveJson(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
   function getProgress(id) {
-    return state.progress[id] || { viewed: 0, known: 0, missed: 0, lastViewed: "", lastAnswered: "" };
+    return {
+      viewed: 0,
+      known: 0,
+      missed: 0,
+      choiceKnown: 0,
+      choiceMissed: 0,
+      lastViewed: "",
+      lastAnswered: "",
+      ...(state.progress[id] || {})
+    };
   }
   function setProgress(id, patch) {
     state.progress[id] = { ...getProgress(id), ...patch };
@@ -148,8 +157,13 @@
   }
   function byWeakness(a, b) {
     const pa = getProgress(a.id), pb = getProgress(b.id);
-    const scoreA = pa.known * 2 - pa.missed - (pa.viewed ? 0 : 5);
-    const scoreB = pb.known * 2 - pb.missed - (pb.viewed ? 0 : 5);
+    const choiceMode = els.studyMode.value === "choice";
+    const knownA = choiceMode ? pa.choiceKnown : pa.known;
+    const missedA = choiceMode ? pa.choiceMissed : pa.missed;
+    const knownB = choiceMode ? pb.choiceKnown : pb.known;
+    const missedB = choiceMode ? pb.choiceMissed : pb.missed;
+    const scoreA = knownA * 2 - missedA - (pa.viewed ? 0 : 5);
+    const scoreB = knownB * 2 - missedB - (pb.viewed ? 0 : 5);
     return scoreA - scoreB || a.id.localeCompare(b.id);
   }
   function shuffle(list) {
@@ -309,10 +323,10 @@
     const p = getProgress(card.id);
     const patch = { lastAnswered: new Date().toISOString() };
     if (option.correct) {
-      patch.known = p.known + 1;
+      patch.choiceKnown = p.choiceKnown + 1;
       els.choiceFeedback.textContent = "Correct. Press Next or → to continue.";
     } else {
-      patch.missed = p.missed + 1;
+      patch.choiceMissed = p.choiceMissed + 1;
       els.choiceFeedback.textContent = `Missed. Correct meaning: ${translationFor(card)}`;
     }
     setProgress(card.id, patch);
@@ -339,12 +353,14 @@
   function renderGlobalStats() {
     const ids = new Set(vocab.map((card) => card.id));
     const viewed = [...ids].filter((id) => getProgress(id).viewed > 0).length;
-    const known = [...ids].filter((id) => getProgress(id).known > 0).length;
+    const flashKnown = [...ids].filter((id) => getProgress(id).known > 0).length;
+    const choiceKnown = [...ids].filter((id) => getProgress(id).choiceKnown > 0).length;
     const totalViews = [...ids].reduce((sum, id) => sum + getProgress(id).viewed, 0);
     const translations = vocab.filter((card) => card.translation || state.customTranslations[card.id]).length;
     els.globalStats.innerHTML = `
       <div>${viewed} / ${vocab.length} words viewed</div>
-      <div>${known} words marked known at least once</div>
+      <div>${flashKnown} words known in flashcards</div>
+      <div>${choiceKnown} words correct in 4-choice</div>
       <div>${totalViews} total card views</div>
       <div>${translations} words have Chinese translations</div>
     `;
@@ -353,14 +369,18 @@
     const card = currentCard();
     if (!card) { els.wordStats.innerHTML = ""; return; }
     const p = getProgress(card.id);
-    const rate = p.known + p.missed ? Math.round((p.known / (p.known + p.missed)) * 100) + "%" : "-";
+    const flashRate = p.known + p.missed ? Math.round((p.known / (p.known + p.missed)) * 100) + "%" : "-";
+    const choiceRate = p.choiceKnown + p.choiceMissed ? Math.round((p.choiceKnown / (p.choiceKnown + p.choiceMissed)) * 100) + "%" : "-";
     els.wordStats.innerHTML = `
       <dt>Word ID</dt><dd>${card.id}</dd>
       <dt>Chapter</dt><dd>${card.chapter}</dd>
       <dt>Viewed</dt><dd>${p.viewed}</dd>
-      <dt>Known</dt><dd>${p.known}</dd>
-      <dt>Missed</dt><dd>${p.missed}</dd>
-      <dt>Success Rate</dt><dd>${rate}</dd>
+      <dt>Flash Known</dt><dd>${p.known}</dd>
+      <dt>Flash Missed</dt><dd>${p.missed}</dd>
+      <dt>Flash Rate</dt><dd>${flashRate}</dd>
+      <dt>Choice Correct</dt><dd>${p.choiceKnown}</dd>
+      <dt>Choice Missed</dt><dd>${p.choiceMissed}</dd>
+      <dt>Choice Rate</dt><dd>${choiceRate}</dd>
     `;
   }
   function renderWordList() {
@@ -375,7 +395,7 @@
       button.type = "button";
       button.className = "word-item" + (current && current.id === card.id ? " active" : "");
       const p = getProgress(card.id);
-      button.innerHTML = `<span>${card.word}<small>Ch ${card.chapter} #${card.id}</small></span><small>${p.viewed}/${p.known}</small>`;
+      button.innerHTML = `<span>${card.word}<small>Ch ${card.chapter} #${card.id}</small></span><small>F ${p.known}/${p.missed}<br>C ${p.choiceKnown}/${p.choiceMissed}</small>`;
       button.addEventListener("click", () => {
         const idx = state.session.findIndex((item) => item.id === card.id);
         if (idx >= 0) {
