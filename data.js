@@ -3198,8 +3198,8 @@ window.N2_VOCAB = [
   {
     "id": "0160",
     "word": "ごく",
-    "translation": "極",
-    "translation_source": "quiz",
+    "translation": "極為",
+    "translation_source": "manual",
     "chapter": 2,
     "chapterTitle": "Chapter 2",
     "section": 2,
