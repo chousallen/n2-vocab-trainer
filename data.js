@@ -7445,18 +7445,18 @@ window.N2_VOCAB = [
     "id": "0366",
     "word": "束",
     "translation": "捆；束；捆",
-    "translation_source": "jisho+mt",
+    "translation_source": "manual",
     "chapter": 3,
     "chapterTitle": "Chapter 3",
     "section": 5,
     "sectionTitle": "Section 5全部播放",
     "audioUrl": "http://www.jwbooks.com.tw/APPSC/JN556859/webroot/files/book2/short/0366.mp3",
     "english_gloss": "bundle; bunch; sheaf",
-    "reading": "そく",
+    "reading": "たば",
     "ruby": [
       {
         "text": "束",
-        "reading": "そく"
+        "reading": "たば"
       }
     ]
   },
