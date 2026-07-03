@@ -200,8 +200,8 @@
     renderRuby(els.backWord, card);
     els.translationText.textContent = translationFor(card);
     els.translationEdit.value = state.customTranslations[card.id] || card.translation || "";
-    els.dictLink.href = `https://www.google.com/search?q=${encodeURIComponent(card.word + ' 中文 意思 日文')}`;
-    els.dictLink.textContent = "Dictionary search";
+    els.dictLink.href = `https://mazii.net/en-US/search/word/jatw/${encodeURIComponent(card.word)}`;
+    els.dictLink.textContent = "Mazii dictionary";
     const isNewAudioCard = els.audioPlayer.dataset.cardId !== card.id;
     if (isNewAudioCard) setAudioSource(card);
     if (isNewAudioCard && countView && els.autoPlay.checked) {
