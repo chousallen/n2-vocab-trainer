@@ -2340,14 +2340,14 @@ window.N2_VOCAB = [
   {
     "id": "0117",
     "word": "せい",
-    "translation": "姓；姓；世襲頭銜（在古代日本用來表示等級和政治地位）",
-    "translation_source": "jisho+mt",
+    "translation": "因為（負面因素）；～害的",
+    "translation_source": "manual",
     "chapter": 1,
     "chapterTitle": "Chapter 1",
     "section": 5,
     "sectionTitle": "Section 5全部播放",
     "audioUrl": "http://www.jwbooks.com.tw/APPSC/JN556859/webroot/files/book2/short/0117.mp3",
-    "english_gloss": "surname; family name; hereditary title (used in ancient Japan to denote rank and political standing)",
+    "english_gloss": "because of; due to; fault; blame, usually negative",
     "reading": "せい",
     "ruby": [
       {
