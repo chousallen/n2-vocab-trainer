@@ -5711,14 +5711,14 @@ window.N2_VOCAB = [
   {
     "id": "0283",
     "word": "あと",
-    "translation": "痕跡；曲目；標記；符號；地點",
-    "translation_source": "jisho+mt",
+    "translation": "剩下；再",
+    "translation_source": "manual",
     "chapter": 3,
     "chapterTitle": "Chapter 3",
     "section": 1,
     "sectionTitle": "Section 1全部播放",
     "audioUrl": "http://www.jwbooks.com.tw/APPSC/JN556859/webroot/files/book2/short/0283.mp3",
-    "english_gloss": "trace; tracks; mark; sign; site",
+    "english_gloss": "remaining; more; another",
     "reading": "あと",
     "ruby": [
       {
