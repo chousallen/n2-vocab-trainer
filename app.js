@@ -47,6 +47,10 @@
     choicePanel: document.getElementById("choicePanel"),
     choiceOptions: document.getElementById("choiceOptions"),
     choiceFeedback: document.getElementById("choiceFeedback"),
+    choiceEditHint: document.getElementById("choiceEditHint"),
+    choiceTranslationEditor: document.getElementById("choiceTranslationEditor"),
+    choiceTranslationEdit: document.getElementById("choiceTranslationEdit"),
+    choiceSaveTranslation: document.getElementById("choiceSaveTranslation"),
     prevBtn: document.getElementById("prevBtn"),
     flipBtn: document.getElementById("flipBtn"),
     nextBtn: document.getElementById("nextBtn"),
@@ -220,6 +224,8 @@
       els.playAudioBtn.disabled = true;
       els.choiceOptions.replaceChildren();
       els.choiceFeedback.textContent = "";
+      els.choiceTranslationEditor.hidden = true;
+      els.choiceTranslationEdit.value = "";
       renderWordStats();
       return;
     }
@@ -314,6 +320,19 @@
     if (!state.choiceAnswered) {
       els.choiceFeedback.textContent = "Choose the correct Chinese meaning.";
     }
+    renderChoiceTranslationEditor(card);
+  }
+  function renderChoiceTranslationEditor(card) {
+    els.choiceTranslationEditor.hidden = false;
+    els.choiceTranslationEditor.classList.toggle("locked", !state.choiceAnswered);
+    els.choiceEditHint.textContent = state.choiceAnswered
+      ? "Edit this word's Chinese meaning, then save. It will be used in flashcards and future 4-choice tests."
+      : "Answer first to edit this word's Chinese meaning.";
+    els.choiceTranslationEdit.disabled = !state.choiceAnswered;
+    els.choiceSaveTranslation.disabled = !state.choiceAnswered;
+    els.choiceTranslationEdit.value = state.choiceAnswered
+      ? state.customTranslations[card.id] || card.translation || ""
+      : "";
   }
   function selectChoice(option) {
     const card = currentCard();
@@ -331,6 +350,18 @@
     }
     setProgress(card.id, patch);
     renderChoices(card);
+    setTimeout(() => els.choiceTranslationEditor.scrollIntoView({ block: "nearest", behavior: "smooth" }), 0);
+  }
+  function saveTranslationFor(card, value) {
+    if (value) state.customTranslations[card.id] = value;
+    else delete state.customTranslations[card.id];
+    saveJson(translationKey, state.customTranslations);
+    state.choiceOptions.forEach((option) => {
+      if (option.id === card.id) option.text = translationFor(card);
+    });
+    renderCard(false);
+    renderGlobalStats();
+    renderWordList();
   }
   function renderChapters() {
     const chapters = [...new Set(vocab.map((card) => Number(card.chapter)))].sort((a, b) => a - b);
@@ -496,12 +527,12 @@
   els.saveTranslation.addEventListener("click", () => {
     const card = currentCard();
     if (!card) return;
-    const value = els.translationEdit.value.trim();
-    if (value) state.customTranslations[card.id] = value;
-    else delete state.customTranslations[card.id];
-    saveJson(translationKey, state.customTranslations);
-    renderCard(false);
-    renderGlobalStats();
+    saveTranslationFor(card, els.translationEdit.value.trim());
+  });
+  els.choiceSaveTranslation.addEventListener("click", () => {
+    const card = currentCard();
+    if (!card || !state.choiceAnswered) return;
+    saveTranslationFor(card, els.choiceTranslationEdit.value.trim());
   });
   els.searchInput.addEventListener("input", renderWordList);
   els.exportBtn.addEventListener("click", exportProgress);

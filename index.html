@@ -114,6 +114,14 @@
         <div id="choicePanel" class="choice-panel" hidden>
           <div id="choiceOptions" class="choice-options"></div>
           <div id="choiceFeedback" class="choice-feedback" aria-live="polite"></div>
+          <div id="choiceTranslationEditor" class="choice-translation-editor" hidden>
+            <div id="choiceEditHint" class="choice-edit-hint">Answer first to edit this word&apos;s Chinese meaning.</div>
+            <label class="edit-field">
+              <span>Edit Chinese translation for this word</span>
+              <textarea id="choiceTranslationEdit" rows="3"></textarea>
+            </label>
+            <button id="choiceSaveTranslation" type="button">Save Translation</button>
+          </div>
         </div>
 
         <div class="controls">
