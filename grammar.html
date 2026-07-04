@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>N2 Grammar 4-Choice Review</title>
+    <link rel="icon" href="data:,">
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f1115;
+        --panel: #171a20;
+        --panel2: #20242c;
+        --line: #343a46;
+        --text: #f4f7fb;
+        --muted: #98a2b3;
+        --accent: #15a38a;
+        --good: #2f9e44;
+        --bad: #c2410c;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .shell {
+        display: grid;
+        grid-template-columns: minmax(220px, 300px) minmax(0, 1fr) minmax(260px, 380px);
+        min-height: 100vh;
+      }
+      aside, main { padding: 22px; }
+      aside { border-right: 1px solid var(--line); background: #101217; }
+      .right { border-left: 1px solid var(--line); border-right: 0; }
+      h1, h2, p { margin: 0; }
+      h1 { font-size: 25px; }
+      h2 { font-size: 15px; margin-bottom: 14px; }
+      .brand p, .hint, label span, small { color: var(--muted); }
+      .brand { margin-bottom: 26px; }
+      .panel { border-top: 1px solid var(--line); padding-top: 18px; margin-top: 18px; }
+      .field { display: grid; gap: 7px; margin-bottom: 14px; }
+      select, button {
+        font: inherit;
+        color: var(--text);
+        background: #0f1115;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        min-height: 40px;
+      }
+      select { padding: 0 10px; }
+      button { cursor: pointer; padding: 0 14px; }
+      button:hover { border-color: #6b7280; }
+      .primary { background: var(--accent); border-color: var(--accent); width: 100%; }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 24px;
+      }
+      .top a { color: #7dd3fc; text-decoration: none; }
+      .card {
+        min-height: 390px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #111318;
+        padding: 32px;
+      }
+      .meta { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+      .pattern {
+        font-size: clamp(34px, 6vw, 72px);
+        line-height: 1.15;
+        font-weight: 800;
+        letter-spacing: 0;
+      }
+      .options {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+      }
+      .option {
+        min-height: 78px;
+        display: grid;
+        grid-template-columns: 36px 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        text-align: left;
+      }
+      .option span {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--panel2);
+        color: var(--muted);
+      }
+      .option strong { font-weight: 650; line-height: 1.45; }
+      .option.correct { border-color: var(--good); background: rgba(47, 158, 68, .18); }
+      .option.wrong { border-color: var(--bad); background: rgba(194, 65, 12, .18); }
+      .feedback {
+        min-height: 34px;
+        margin: 14px 0;
+        color: var(--muted);
+      }
+      .feedback.ok { color: #86efac; }
+      .feedback.bad { color: #fdba74; }
+      .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      .stats-grid div {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        background: var(--panel);
+      }
+      .stats-grid b { display: block; font-size: 22px; }
+      .stats-grid span { color: var(--muted); font-size: 12px; }
+      .list {
+        display: grid;
+        gap: 8px;
+        max-height: calc(100vh - 160px);
+        overflow: auto;
+      }
+      .list article {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+        background: #111318;
+      }
+      .list span { color: var(--muted); font-size: 12px; }
+      .list strong { display: block; margin: 4px 0; }
+      .list p { color: #d8dee9; font-size: 13px; line-height: 1.4; }
+      @media (max-width: 1050px) {
+        .shell { grid-template-columns: 1fr; }
+        aside, .right { border: 0; border-bottom: 1px solid var(--line); }
+        .options { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside>
+        <header class="brand">
+          <h1>N2 Grammar</h1>
+          <p>4-choice review before the test</p>
+        </header>
+        <section class="panel">
+          <h2>Session</h2>
+          <label class="field">
+            <span>Scope</span>
+            <select id="weekFilter"></select>
+          </label>
+          <label class="field">
+            <span>Order</span>
+            <select id="modeFilter">
+              <option value="random">Random</option>
+              <option value="weak">Weak / unseen first</option>
+              <option value="ordered">Course order</option>
+            </select>
+          </label>
+          <button id="shuffleBtn" class="primary" type="button">Start New Round</button>
+        </section>
+        <section class="panel">
+          <h2>Keyboard</h2>
+          <p class="hint">Use 1-4 to answer. Enter moves to the next question. R reveals the answer.</p>
+        </section>
+        <section class="panel">
+          <button id="resetBtn" type="button">Reset Local Progress</button>
+        </section>
+      </aside>
+
+      <main>
+        <header class="top">
+          <div>
+            <p class="hint" id="progress">Start a session</p>
+            <h1>Choose the Chinese meaning</h1>
+          </div>
+          <a href="./index.html">Vocabulary trainer</a>
+        </header>
+        <section class="card">
+          <div>
+            <div id="cardMeta" class="meta"></div>
+            <div id="pattern" class="pattern"></div>
+          </div>
+        </section>
+        <section id="options" class="options"></section>
+        <div id="feedback" class="feedback"></div>
+        <div class="controls">
+          <button id="revealBtn" type="button">Reveal Answer (R)</button>
+          <button id="nextBtn" type="button">Next (Enter)</button>
+        </div>
+      </main>
+
+      <aside class="right">
+        <section class="panel" style="border-top:0;margin-top:0;padding-top:0">
+          <h2>Progress</h2>
+          <div id="stats" class="stats-grid"></div>
+        </section>
+        <section class="panel">
+          <h2>All Grammar</h2>
+          <div id="grammarList" class="list"></div>
+        </section>
+      </aside>
+    </div>
+    <script src="./grammar-data.js?v=1"></script>
+    <script src="./grammar-app.js?v=1"></script>
+  </body>
+</html>
